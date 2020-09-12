@@ -1,0 +1,62 @@
+version: "3"
+
+services:
+  db:
+    image: mongo:3.1
+    restart: always
+    container_name: mongo_db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    networks:
+      ml_net:
+        ipv4_address: 172.30.0.4
+    expose:
+      - "8081"
+
+  ml_model:
+    build:
+      context: .
+      dockerfile: ./docker/dockerfile/ml/Dockerfile
+    container_name: ml_model
+    volumes:
+      - ./docker/mount/models:/tf/notebooks/models
+    networks:
+      ml_net:
+        ipv4_address: 172.30.0.5
+    expose:
+      - "8888"
+
+  rest:
+    build:
+      context: .
+      dockerfile: ./docker/dockerfile/rest/Dockerfile
+    restart: always
+    container_name: rest_server
+    volumes:
+      - ./docker/mount/models:/home/models
+    networks:
+      ml_net:
+        ipv4_address: 172.30.0.6
+    expose:
+      - "5000"
+
+  web:
+    build:
+      context: .
+      dockerfile: ./docker/dockerfile/web/Dockerfile
+    container_name: web
+    networks:
+      ml_net:
+        ipv4_address: 172.30.0.7
+    expose:
+      - "80"
+    ports:
+      - "80:80"
+
+networks:
+  ml_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.30.0.0/16

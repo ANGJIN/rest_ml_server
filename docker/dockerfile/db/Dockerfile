@@ -1,0 +1,3 @@
+FROM mongo:3.1
+
+EXPOSE 8081
